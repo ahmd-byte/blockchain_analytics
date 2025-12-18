@@ -65,9 +65,22 @@ class BigQueryMLHelper:
         Args:
             project_id: GCP project ID (defaults to config)
         """
-        self.project_id = project_id or CONFIG.bigquery.project_id
+        import os
+        # Try multiple sources for project ID
+        self.project_id = (
+            project_id 
+            or CONFIG.bigquery.project_id 
+            or os.getenv("GOOGLE_CLOUD_PROJECT") 
+            or os.getenv("GCP_PROJECT")
+            or "blockchain-481614"  # Fallback to known project
+        )
+        
+        if not self.project_id:
+            raise ValueError("No GCP project ID provided. Set GOOGLE_CLOUD_PROJECT environment variable.")
+        
         self.client = bigquery.Client(project=self.project_id)
         self.logger = setup_logger(__name__)
+        self.logger.info(f"Initialized BigQuery client for project: {self.project_id}")
     
     def ensure_dataset_exists(self, dataset_id: str) -> None:
         """Create dataset if it doesn't exist."""

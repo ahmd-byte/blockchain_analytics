@@ -36,6 +36,11 @@ venv/
 .venv/
 ENV/
 env/
+**/venv/
+**/.venv/
+data_engineering/venv/
+data_science/venv/
+backend/venv/
 
 # PyInstaller
 *.manifest

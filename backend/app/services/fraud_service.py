@@ -73,25 +73,27 @@ class FraudService:
         query_params = []
         
         if params.min_fraud_score is not None:
-            where_conditions.append("fraud_score >= @min_fraud_score")
+            where_conditions.append("fs.fraud_score >= @min_fraud_score")
             query_params.append(
                 bigquery.ScalarQueryParameter("min_fraud_score", "FLOAT64", params.min_fraud_score)
             )
         
         if params.max_fraud_score is not None:
-            where_conditions.append("fraud_score <= @max_fraud_score")
+            where_conditions.append("fs.fraud_score <= @max_fraud_score")
             query_params.append(
                 bigquery.ScalarQueryParameter("max_fraud_score", "FLOAT64", params.max_fraud_score)
             )
         
         if params.is_suspicious is not None:
-            where_conditions.append("is_suspicious = @is_suspicious")
-            query_params.append(
-                bigquery.ScalarQueryParameter("is_suspicious", "BOOL", params.is_suspicious)
-            )
+            # Convert is_suspicious filter to fraud_score condition
+            # is_suspicious = True means fraud_score >= 0.7
+            if params.is_suspicious:
+                where_conditions.append("fs.fraud_score >= 0.7")
+            else:
+                where_conditions.append("fs.fraud_score < 0.7")
         
         if params.min_tx_count is not None:
-            where_conditions.append("tx_count >= @min_tx_count")
+            where_conditions.append("wf.tx_count >= @min_tx_count")
             query_params.append(
                 bigquery.ScalarQueryParameter("min_tx_count", "INT64", params.min_tx_count)
             )
@@ -172,10 +174,12 @@ class FraudService:
             )
             
         except Exception as e:
-            # If ML table doesn't exist, try fallback to raw_wallets
-            if "Not found" in str(e):
-                return await self._get_fraud_wallets_fallback(params)
-            raise Exception(f"Failed to fetch fraud wallets: {str(e)}")
+            # If ML table doesn't exist or query fails, try fallback to raw_wallets
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"ML fraud query failed, using fallback: {str(e)}")
+            # Use fallback for any error (table not found, schema mismatch, etc.)
+            return await self._get_fraud_wallets_fallback(params)
     
     async def _get_fraud_wallets_fallback(
         self,

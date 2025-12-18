@@ -268,3 +268,4 @@ gcloud run deploy blockchain-frontend \
 | `CORS_ORIGINS` | Allowed CORS origins | `http://localhost:3000` |
 | `VITE_API_URL` | API URL for frontend | `http://localhost:8080` |
 
+

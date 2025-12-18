@@ -17,7 +17,7 @@ load_dotenv()
 @dataclass
 class BigQueryConfig:
     """BigQuery configuration for ML pipeline."""
-    project_id: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT", ""))
+    project_id: str = field(default_factory=lambda: os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("GCP_PROJECT") or "blockchain-481614")
     credentials_path: str = field(default_factory=lambda: os.getenv("GOOGLE_APPLICATION_CREDENTIALS", ""))
     
     # Source datasets

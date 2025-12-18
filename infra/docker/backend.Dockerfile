@@ -82,3 +82,4 @@ EXPOSE ${PORT}
 # Run the application
 CMD ["sh", "-c", "uvicorn app.main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}"]
 
+

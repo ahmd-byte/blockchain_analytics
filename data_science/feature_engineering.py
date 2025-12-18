@@ -81,7 +81,7 @@ class FeatureEngineer:
                 gas_price,
                 gas_used,
                 to_address AS counterparty,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'out' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE from_address IS NOT NULL
@@ -95,7 +95,7 @@ class FeatureEngineer:
                 gas_price,
                 gas_used,
                 from_address AS counterparty,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'in' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE to_address IS NOT NULL
@@ -179,7 +179,7 @@ class FeatureEngineer:
                 from_address AS wallet_address,
                 value_eth,
                 to_address AS counterparty,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'out' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE from_address IS NOT NULL
@@ -190,7 +190,7 @@ class FeatureEngineer:
                 to_address AS wallet_address,
                 value_eth,
                 from_address AS counterparty,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'in' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE to_address IS NOT NULL
@@ -263,7 +263,7 @@ class FeatureEngineer:
             SELECT
                 from_address AS wallet_address,
                 value_eth,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'out' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE from_address IS NOT NULL
@@ -273,7 +273,7 @@ class FeatureEngineer:
             SELECT
                 to_address AS wallet_address,
                 value_eth,
-                block_timestamp,
+                transaction_timestamp AS block_timestamp,
                 'in' AS direction
             FROM `{self.config.project_id}.{self.config.raw_dataset}.{self.config.raw_transactions_table}`
             WHERE to_address IS NOT NULL

@@ -9,3 +9,4 @@ metadata:
     app.kubernetes.io/name: blockchain-analytics
     app.kubernetes.io/component: infrastructure
 
+
