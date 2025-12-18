@@ -364,18 +364,6 @@ python -m ingestion.ingest_wallets \
 
 ## 🚧 Development
 
-### Using Mock Data
-
-For development without BigQuery, the API supports mock data mode:
-
-```bash
-# Set in backend/.env
-DEBUG=True
-
-# Or use query parameter
-curl "http://localhost:8080/api/dashboard/summary?use_mock=true"
-```
-
 ### Running dbt Models
 
 ```bash

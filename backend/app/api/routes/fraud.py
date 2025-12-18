@@ -14,7 +14,6 @@ from app.schemas.fraud import (
 )
 from app.schemas.health import ErrorResponse
 from app.services.fraud_service import FraudService, get_fraud_service
-from app.core.config import get_settings, Settings
 
 
 router = APIRouter(
@@ -80,12 +79,7 @@ async def get_fraud_wallets(
         ge=1,
         le=1000
     ),
-    use_mock: Optional[bool] = Query(
-        default=False,
-        description="Use mock data for development/testing"
-    ),
-    service: FraudService = Depends(get_fraud_service),
-    settings: Settings = Depends(get_settings)
+    service: FraudService = Depends(get_fraud_service)
 ) -> FraudWalletListResponse:
     """
     Get list of wallets with fraud scores.
@@ -127,9 +121,7 @@ async def get_fraud_wallets(
         sort_order: Sort direction
         page: Page number (1-based)
         page_size: Results per page (1-1000)
-        use_mock: If True, return mock data
         service: Fraud service dependency
-        settings: Application settings dependency
         
     Returns:
         FraudWalletListResponse: Paginated list of fraud wallet data
@@ -149,9 +141,6 @@ async def get_fraud_wallets(
             page=page,
             page_size=page_size
         )
-        
-        if use_mock or settings.debug:
-            return await service.get_fraud_wallets_mock(params)
         
         return await service.get_fraud_wallets(params)
         

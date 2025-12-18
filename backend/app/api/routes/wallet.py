@@ -6,12 +6,10 @@ including wallet statistics and transaction history.
 """
 
 from fastapi import APIRouter, HTTPException, Depends, Path, Query
-from typing import Optional
 
 from app.schemas.wallet import WalletDetailResponse
 from app.schemas.health import ErrorResponse
 from app.services.wallet_service import WalletService, get_wallet_service
-from app.core.config import get_settings, Settings
 
 
 router = APIRouter(
@@ -50,12 +48,7 @@ async def get_wallet_details(
         ge=1,
         le=365
     ),
-    use_mock: Optional[bool] = Query(
-        default=False,
-        description="Use mock data for development/testing"
-    ),
-    service: WalletService = Depends(get_wallet_service),
-    settings: Settings = Depends(get_settings)
+    service: WalletService = Depends(get_wallet_service)
 ) -> WalletDetailResponse:
     """
     Get detailed wallet information.
@@ -79,9 +72,7 @@ async def get_wallet_details(
     Args:
         wallet_address: The blockchain wallet address to look up
         days: Number of days of history to include (1-365)
-        use_mock: If True, return mock data instead of querying BigQuery
         service: Wallet service dependency
-        settings: Application settings dependency
         
     Returns:
         WalletDetailResponse: Complete wallet details with stats and volumes
@@ -90,9 +81,6 @@ async def get_wallet_details(
         HTTPException: 404 if wallet not found, 500 on query error
     """
     try:
-        if use_mock or settings.debug:
-            return await service.get_wallet_details_mock(wallet_address, days)
-        
         result = await service.get_wallet_details(wallet_address, days)
         
         if result is None:

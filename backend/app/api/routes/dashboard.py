@@ -5,13 +5,11 @@ This module defines API endpoints for dashboard statistics
 and metrics.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Depends
 
 from app.schemas.dashboard import DashboardSummary
 from app.schemas.health import ErrorResponse
 from app.services.dashboard_service import DashboardService, get_dashboard_service
-from app.core.config import get_settings, Settings
 
 
 router = APIRouter(
@@ -37,12 +35,7 @@ router = APIRouter(
     }
 )
 async def get_dashboard_summary(
-    use_mock: Optional[bool] = Query(
-        default=False,
-        description="Use mock data for development/testing"
-    ),
-    service: DashboardService = Depends(get_dashboard_service),
-    settings: Settings = Depends(get_settings)
+    service: DashboardService = Depends(get_dashboard_service)
 ) -> DashboardSummary:
     """
     Get dashboard summary statistics.
@@ -57,9 +50,7 @@ async def get_dashboard_summary(
     - **last_updated**: Timestamp of last data refresh
     
     Args:
-        use_mock: If True, return mock data instead of querying BigQuery
         service: Dashboard service dependency
-        settings: Application settings dependency
         
     Returns:
         DashboardSummary: Dashboard summary statistics
@@ -68,8 +59,6 @@ async def get_dashboard_summary(
         HTTPException: 500 error if query execution fails
     """
     try:
-        if use_mock or settings.debug:
-            return await service.get_summary_mock()
         return await service.get_summary()
     except Exception as e:
         raise HTTPException(

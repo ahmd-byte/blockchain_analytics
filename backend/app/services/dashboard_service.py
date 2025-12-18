@@ -110,22 +110,6 @@ class DashboardService:
         except Exception as e:
             raise Exception(f"Failed to fetch dashboard summary: {str(e)}")
     
-    async def get_summary_mock(self) -> DashboardSummary:
-        """
-        Get mock dashboard summary for development/testing.
-        
-        Returns:
-            DashboardSummary: Mock summary statistics
-        """
-        return DashboardSummary(
-            total_transactions=1547832,
-            total_volume=25847293.45,
-            total_wallets=78234,
-            suspicious_wallet_count=1342,
-            last_updated=datetime.utcnow()
-        )
-
-
 def get_dashboard_service() -> DashboardService:
     """
     Get dashboard service instance.

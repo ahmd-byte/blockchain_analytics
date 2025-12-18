@@ -6,7 +6,6 @@ including wallet statistics and transaction history retrieval.
 """
 
 from typing import Optional
-from datetime import date, datetime, timedelta
 from google.cloud import bigquery
 
 from app.core.bigquery_client import get_bigquery_client
@@ -148,53 +147,6 @@ class WalletService:
         except Exception as e:
             raise Exception(f"Failed to fetch wallet details: {str(e)}")
     
-    async def get_wallet_details_mock(
-        self, 
-        wallet_address: str,
-        days: int = 30
-    ) -> WalletDetailResponse:
-        """
-        Get mock wallet details for development/testing.
-        
-        Args:
-            wallet_address: The blockchain wallet address
-            days: Number of days of history
-            
-        Returns:
-            WalletDetailResponse: Mock wallet details
-        """
-        # Generate mock daily volumes
-        daily_volumes = []
-        base_date = date.today()
-        
-        for i in range(min(days, 30)):
-            current_date = base_date - timedelta(days=i)
-            daily_volumes.append(
-                DailyTransactionVolume(
-                    transaction_date=current_date,
-                    transaction_count=50 + (i * 3) % 100,
-                    total_value=round(1000 + (i * 100) % 5000, 2),
-                    inflow=round(500 + (i * 50) % 2500, 2),
-                    outflow=round(500 + (i * 50) % 2500, 2)
-                )
-            )
-        
-        return WalletDetailResponse(
-            stats=WalletStats(
-                wallet_address=wallet_address,
-                total_transactions=1523,
-                total_volume=245890.75,
-                first_transaction_date=date(2023, 1, 15),
-                last_transaction_date=date.today(),
-                unique_counterparties=342,
-                average_transaction_value=161.45,
-                fraud_score=0.12,
-                is_suspicious=False
-            ),
-            daily_volumes=daily_volumes
-        )
-
-
 def get_wallet_service() -> WalletService:
     """
     Get wallet service instance.

@@ -248,50 +248,6 @@ class FraudService:
             suspicious_count=int(count_data.get("suspicious_count", 0))
         )
     
-    async def get_fraud_wallets_mock(
-        self,
-        params: FraudQueryParams
-    ) -> FraudWalletListResponse:
-        """
-        Get mock fraud wallet data for development/testing.
-        
-        Args:
-            params: Query parameters
-            
-        Returns:
-            FraudWalletListResponse: Mock fraud wallet data
-        """
-        # Generate mock data
-        mock_wallets = [
-            FraudWallet(
-                wallet_address=f"0x{i:040x}",
-                fraud_score=round(0.1 + (i * 0.05) % 0.9, 2),
-                is_suspicious=(i % 3 == 0),
-                tx_count=100 + i * 50,
-                total_value=round(10000 + i * 5000, 2),
-                risk_category=self._get_risk_category(0.1 + (i * 0.05) % 0.9),
-                last_activity=datetime.utcnow(),
-                flagged_reason="High-risk patterns" if i % 3 == 0 else None
-            )
-            for i in range(params.page_size)
-        ]
-        
-        # Apply filters
-        if params.is_suspicious is not None:
-            mock_wallets = [w for w in mock_wallets if w.is_suspicious == params.is_suspicious]
-        
-        if params.min_fraud_score is not None:
-            mock_wallets = [w for w in mock_wallets if w.fraud_score >= params.min_fraud_score]
-        
-        return FraudWalletListResponse(
-            wallets=mock_wallets,
-            total_count=1342,
-            page=params.page,
-            page_size=params.page_size,
-            suspicious_count=450
-        )
-
-
 def get_fraud_service() -> FraudService:
     """
     Get fraud service instance.

@@ -1,0 +1,175 @@
+# ============================================================
+# Blockchain Analytics Platform - Git Ignore
+# ============================================================
+
+# ============================================================
+# Python
+# ============================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ============================================================
+# Node / JavaScript
+# ============================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Build outputs
+frontend/dist/
+
+# ============================================================
+# IDE / Editors
+# ============================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+.cursor/
+
+# ============================================================
+# Environment Variables
+# ============================================================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ============================================================
+# Google Cloud / Credentials
+# ============================================================
+credentials/
+*.json
+!package.json
+!package-lock.json
+!dbt_project.yml
+!profiles.yml.example
+!*.dist-info/*.json
+
+# Service account keys (critical - never commit)
+*service-account*.json
+*credentials*.json
+
+# ============================================================
+# Data / Output Files
+# ============================================================
+outputs/
+*.csv
+*.parquet
+*.pkl
+*.pickle
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ============================================================
+# OS Files
+# ============================================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================================
+# Logs
+# ============================================================
+*.log
+logs/
+
+# ============================================================
+# Temporary Files
+# ============================================================
+*.tmp
+*.temp
+*.bak
+.tmp/
+tmp/
+temp/
+
+# ============================================================
+# Docker
+# ============================================================
+.docker/
+
+# ============================================================
+# Terraform (if used)
+# ============================================================
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+
