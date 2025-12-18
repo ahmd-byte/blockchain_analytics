@@ -39,6 +39,7 @@ env/
 **/venv/
 **/.venv/
 data_engineering/venv/
+data_engineering/.env/
 data_science/venv/
 backend/venv/
 
@@ -123,6 +124,10 @@ credentials/
 # Service account keys (critical - never commit)
 *service-account*.json
 *credentials*.json
+*.pem
+*.key
+*.p12
+*.pfx
 
 # ============================================================
 # Data / Output Files
