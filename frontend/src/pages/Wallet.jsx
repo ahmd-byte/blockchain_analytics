@@ -8,7 +8,6 @@ import { Search, Wallet as WalletIcon, Activity, ShieldAlert } from 'lucide-reac
 import { Skeleton } from '@/components/ui/skeleton';
 import TransactionChart from '../components/TransactionChart';
 import { cn } from "@/lib/utils";
-import { toast } from 'sonner';
 
 const Wallet = () => {
     const { address } = useParams();
@@ -75,8 +74,6 @@ const Wallet = () => {
                         { name: 'Sun', value: 0 },
                     ],
                 });
-
-                toast.success("Wallet data loaded successfully");
             } catch (err) {
                 console.error(err);
                 setError(err.response?.status === 404 ? 'Wallet not found' : 'Failed to load wallet data');

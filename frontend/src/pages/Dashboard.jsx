@@ -29,7 +29,7 @@ const Dashboard = () => {
         return `$${num?.toLocaleString() || '0'}`;
     };
 
-    const fetchDashboardData = async () => {
+    const fetchDashboardData = async (showToast = false) => {
         setLoading(true);
         try {
             // Fetch dashboard summary
@@ -74,7 +74,9 @@ const Dashboard = () => {
                 riskScore: Math.round(wallet.fraud_score * 100),
             })));
 
-            toast.success("Dashboard data loaded successfully");
+            if (showToast) {
+                toast.success("Dashboard data refreshed");
+            }
         } catch (error) {
             console.error("Failed to fetch dashboard data", error);
             toast.error("Failed to load dashboard data");
@@ -138,7 +140,7 @@ const Dashboard = () => {
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                 <div className="flex items-center gap-2">
-                    <Button onClick={fetchDashboardData} size="sm" className="bg-[#D40000] hover:bg-[#b30000] text-white">
+                    <Button onClick={() => fetchDashboardData(true)} size="sm" className="bg-[#D40000] hover:bg-[#b30000] text-white">
                         Refresh Data
                     </Button>
                 </div>

@@ -34,7 +34,7 @@ const Fraud = () => {
         return { color: 'bg-emerald-500', textColor: 'text-emerald-700', label: 'Low' };
     };
 
-    const fetchFraudData = async (page = 1) => {
+    const fetchFraudData = async (page = 1, showToast = false) => {
         setLoading(true);
         try {
             let params = `?page=${page}&page_size=${pagination.pageSize}&sort_by=fraud_score&sort_order=desc`;
@@ -68,7 +68,9 @@ const Fraud = () => {
                 suspiciousCount: fraudData.suspicious_count,
             }));
 
-            toast.success("Fraud data loaded successfully");
+            if (showToast) {
+                toast.success("Fraud data refreshed");
+            }
         } catch (error) {
             console.error("Failed to fetch fraud data", error);
             toast.error("Failed to load fraud data");
@@ -159,7 +161,7 @@ const Fraud = () => {
                 >
                     High Risk (70%+)
                 </Button>
-                <Button variant="outline" onClick={() => fetchFraudData(pagination.page)} className="ml-auto">
+                <Button variant="outline" onClick={() => fetchFraudData(pagination.page, true)} className="ml-auto">
                     <RefreshCw className="h-4 w-4 mr-2" /> Refresh
                 </Button>
             </div>
