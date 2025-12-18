@@ -55,7 +55,18 @@ blockchain-analytics/
 ├── notebooks/                  # Jupyter notebooks for analysis
 │   ├── 01_exploratory_data_analysis.ipynb  # EDA on transactions
 │   └── 02_fraud_detection_ml.ipynb         # ML model experiments
-├── infra/                      # Deployment configs (placeholder)
+│
+├── infra/                      # Infrastructure & Deployment
+│   ├── docker/                # Dockerfiles (backend, frontend, nginx)
+│   ├── k8s/                   # Kubernetes manifests
+│   ├── scripts/               # Deployment scripts
+│   └── env/                   # Environment templates
+│
+├── .github/workflows/         # CI/CD pipelines
+│   ├── ci-cd.yml             # Main CI/CD workflow
+│   └── pr-checks.yml         # PR validation checks
+│
+├── docker-compose.yml         # Docker Compose configuration
 └── README.md
 ```
 
@@ -397,14 +408,82 @@ After running the ingestion pipeline:
 | Unique Wallets | 6,400+ |
 | Date Range | Oct 2024 - Present |
 
+## 🚀 Deployment
+
+### Docker (Local Development)
+
+```bash
+# 1. Configure environment
+cp infra/env/env.example .env
+# Edit .env with your GOOGLE_CLOUD_PROJECT
+
+# 2. Add GCP credentials  
+mkdir -p credentials
+# Copy service-account.json to credentials/
+
+# 3. Start all services
+./infra/scripts/deploy.sh dev up
+
+# Access the application:
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:8080
+# API Docs: http://localhost:8080/docs
+```
+
+### Docker Compose Commands
+
+```bash
+# Development mode (with hot reload)
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# Production mode
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# View logs
+docker compose logs -f backend
+
+# Stop services
+docker compose down
+```
+
+### Cloud Deployment (GCP)
+
+```bash
+# Build and push images
+./infra/scripts/build-push.sh gcr.io/YOUR_PROJECT_ID latest
+
+# Deploy to Cloud Run
+gcloud run deploy blockchain-backend \
+  --image=gcr.io/YOUR_PROJECT_ID/blockchain-backend:latest \
+  --platform=managed --region=us-central1
+```
+
+### Kubernetes
+
+```bash
+# Apply all manifests
+kubectl apply -f infra/k8s/
+
+# Or individual components
+kubectl apply -f infra/k8s/namespace.yaml
+kubectl apply -f infra/k8s/configmap.yaml
+kubectl apply -f infra/k8s/backend-deployment.yaml
+kubectl apply -f infra/k8s/frontend-deployment.yaml
+kubectl apply -f infra/k8s/ingress.yaml
+```
+
+See `infra/README.md` for detailed deployment documentation.
+
 ## 🗺️ Roadmap
 
 - [x] Machine learning fraud detection models
+- [x] Docker containerization
+- [x] Kubernetes deployment configs
+- [x] CI/CD pipeline (GitHub Actions)
 - [ ] Real-time streaming ingestion
 - [ ] Token transfer tracking (ERC-20)
 - [ ] Multi-chain support (Polygon, BSC)
 - [ ] Alert system for suspicious activity
-- [ ] Kubernetes deployment configs
 - [ ] Model monitoring and drift detection
 - [ ] Graph neural networks for transaction patterns
 
