@@ -43,7 +43,15 @@ blockchain-analytics/
 │   ├── airflow/                # Orchestration DAGs
 │   └── requirements.txt
 │
-├── data_science/               # ML models (placeholder)
+├── data_science/               # ML fraud detection
+│   ├── config.py              # Configuration management
+│   ├── utils.py               # BigQuery helpers, utilities
+│   ├── feature_engineering.py # 30+ wallet features
+│   ├── fraud_model.py         # Isolation Forest, LOF, DBSCAN
+│   ├── model_evaluation.py    # Analysis and visualization
+│   ├── run_pipeline.py        # Pipeline orchestrator
+│   └── sql/                   # Feature extraction queries
+│
 ├── notebooks/                  # Jupyter notebooks (placeholder)
 ├── infra/                      # Deployment configs (placeholder)
 └── README.md
@@ -68,6 +76,12 @@ blockchain-analytics/
 - **Wallet Explorer**: Search and analyze any Ethereum address
 - **Fraud Detection**: View wallets sorted by risk score
 
+### Machine Learning (Data Science)
+- **Feature Engineering**: 30+ wallet-level features (basic, behavioral, temporal)
+- **Anomaly Detection**: Isolation Forest, LOF, DBSCAN models
+- **Ensemble Scoring**: Weighted combination for robust fraud detection
+- **Risk Categories**: Low, Medium, High, Critical classifications
+
 ## 🔄 Data Pipeline Architecture
 
 ```
@@ -75,11 +89,20 @@ blockchain-analytics/
 │   Etherscan     │────▶│   Raw Layer     │────▶│  Staging Layer  │
 │   API V2        │     │ (blockchain_raw)│     │  (cleaned data) │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                        │
-                                                        ▼
+                                                       │
+                              ┌─────────────────────────┤
+                              │                         │
+                              ▼                         ▼
+                    ┌─────────────────┐     ┌─────────────────┐
+                    │  ML Pipeline    │     │ Analytics Layer │
+                    │ (fraud scoring) │     │ (fact/dim)      │
+                    └─────────────────┘     └─────────────────┘
+                              │                         │
+                              └─────────────────────────┤
+                                                       ▼
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   React         │◀────│   FastAPI       │◀────│ Analytics Layer │
-│   Frontend      │     │   Backend       │     │ (fact/dim)      │
+│   React         │◀────│   FastAPI       │◀────│ Fraud Scores    │
+│   Frontend      │     │   Backend       │     │ (blockchain_ml) │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
@@ -100,6 +123,8 @@ blockchain-analytics/
 | Backend | FastAPI, Pydantic v2, Uvicorn, AsyncIO |
 | Database | Google BigQuery |
 | Data Engineering | Python, dbt, Airflow |
+| Data Science | scikit-learn, pandas, numpy |
+| ML Models | Isolation Forest, LOF, DBSCAN |
 | Data Source | Etherscan API V2 |
 
 ## 📦 Quick Start
@@ -159,7 +184,33 @@ cp env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-### 3. Frontend Setup
+### 3. Data Science Setup (ML Pipeline)
+
+```bash
+cd data_science
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp env.example .env
+# Edit .env with your GCP credentials
+
+# Run full ML pipeline
+python -m data_science.run_pipeline --mode full --model-type ensemble
+
+# Or run steps individually
+python -m data_science.run_pipeline --mode features  # Feature engineering
+python -m data_science.run_pipeline --mode train     # Model training
+python -m data_science.run_pipeline --mode score     # Score wallets
+```
+
+### 4. Frontend Setup
 
 ```bash
 cd frontend
@@ -278,6 +329,18 @@ python -m ingestion.ingest_wallets \
 
 **`agg_daily_metrics`** - Pre-aggregated daily statistics
 
+### ML Layer (`blockchain_ml`)
+
+**`wallet_features`** - 30+ computed features per wallet
+- Transaction counts (in/out), value statistics
+- Behavioral patterns (counterparty concentration, self-transactions)
+- Temporal patterns (frequency, time distributions)
+
+**`wallet_fraud_scores`**
+- `fraud_score` (FLOAT): 0.0 (safe) to 1.0 (suspicious)
+- `risk_category`: 'low', 'medium', 'high', 'critical'
+- `isolation_forest_score`, `lof_score`, `dbscan_is_noise`
+
 ## 🔒 Security Features
 
 - ✅ Parameterized SQL queries (SQL injection prevention)
@@ -334,12 +397,14 @@ After running the ingestion pipeline:
 
 ## 🗺️ Roadmap
 
-- [ ] Machine learning fraud detection models
+- [x] Machine learning fraud detection models
 - [ ] Real-time streaming ingestion
 - [ ] Token transfer tracking (ERC-20)
 - [ ] Multi-chain support (Polygon, BSC)
 - [ ] Alert system for suspicious activity
 - [ ] Kubernetes deployment configs
+- [ ] Model monitoring and drift detection
+- [ ] Graph neural networks for transaction patterns
 
 ## 📝 License
 
@@ -358,5 +423,6 @@ MIT License
 Built as a portfolio project demonstrating:
 - Full-stack development (React + FastAPI)
 - Data engineering (ETL pipelines, BigQuery)
+- Data science (ML-based anomaly detection)
 - Cloud services (Google Cloud Platform)
 - Blockchain data analysis
