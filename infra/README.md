@@ -269,3 +269,4 @@ gcloud run deploy blockchain-frontend \
 | `VITE_API_URL` | API URL for frontend | `http://localhost:8080` |
 
 
+
