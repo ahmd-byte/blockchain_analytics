@@ -52,7 +52,9 @@ blockchain-analytics/
 │   ├── run_pipeline.py        # Pipeline orchestrator
 │   └── sql/                   # Feature extraction queries
 │
-├── notebooks/                  # Jupyter notebooks (placeholder)
+├── notebooks/                  # Jupyter notebooks for analysis
+│   ├── 01_exploratory_data_analysis.ipynb  # EDA on transactions
+│   └── 02_fraud_detection_ml.ipynb         # ML model experiments
 ├── infra/                      # Deployment configs (placeholder)
 └── README.md
 ```
