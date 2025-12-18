@@ -44,25 +44,29 @@ class DashboardService:
         analytics_dataset = self.settings.bigquery_dataset_analytics
         ml_dataset = self.settings.bigquery_dataset_ml
         
-        # Query for transaction stats
+        # Query for transaction stats from raw_transactions
         transactions_query = f"""
         SELECT 
             COUNT(*) as total_transactions,
-            COALESCE(SUM(value), 0) as total_volume
+            COALESCE(SUM(CAST(value_eth AS FLOAT64)), 0) as total_volume
         FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}`
         """
         
-        # Query for wallet stats
+        # Query for wallet stats - count unique addresses from transactions
         wallets_query = f"""
-        SELECT COUNT(DISTINCT wallet_address) as total_wallets
-        FROM `{project}.{analytics_dataset}.{self.settings.table_dim_wallet}`
+        SELECT COUNT(DISTINCT address) as total_wallets
+        FROM (
+            SELECT from_address as address FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}`
+            UNION DISTINCT
+            SELECT to_address as address FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}` WHERE to_address IS NOT NULL
+        )
         """
         
-        # Query for suspicious wallet count
+        # Query for suspicious wallet count (placeholder - using high-value transactions as proxy)
         suspicious_query = f"""
-        SELECT COUNT(*) as suspicious_count
-        FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}`
-        WHERE is_suspicious = TRUE
+        SELECT COUNT(DISTINCT from_address) as suspicious_count
+        FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}`
+        WHERE CAST(value_eth AS FLOAT64) > 100
         """
         
         try:
@@ -112,4 +116,5 @@ def get_dashboard_service() -> DashboardService:
         DashboardService: Dashboard service instance
     """
     return DashboardService()
+
 

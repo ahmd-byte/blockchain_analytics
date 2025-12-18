@@ -171,3 +171,4 @@ class FraudQueryParams(BaseModel):
         le=1000
     )
 
+

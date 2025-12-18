@@ -172,3 +172,4 @@ def get_bigquery_client() -> BigQueryClient:
     """
     return BigQueryClient()
 
+

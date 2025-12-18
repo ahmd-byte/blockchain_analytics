@@ -43,12 +43,12 @@ RAW_WALLETS_SCHEMA = [
     bigquery.SchemaField("wallet_address", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("first_seen_timestamp", "TIMESTAMP", mode="NULLABLE"),
     bigquery.SchemaField("last_seen_timestamp", "TIMESTAMP", mode="NULLABLE"),
-    bigquery.SchemaField("balance_wei", "INTEGER", mode="NULLABLE"),
+    bigquery.SchemaField("balance_wei", "NUMERIC", mode="NULLABLE"),  # NUMERIC for large values
     bigquery.SchemaField("balance_eth", "FLOAT", mode="NULLABLE"),
     bigquery.SchemaField("total_transactions_in", "INTEGER", mode="NULLABLE"),
     bigquery.SchemaField("total_transactions_out", "INTEGER", mode="NULLABLE"),
-    bigquery.SchemaField("total_value_in_wei", "INTEGER", mode="NULLABLE"),
-    bigquery.SchemaField("total_value_out_wei", "INTEGER", mode="NULLABLE"),
+    bigquery.SchemaField("total_value_in_wei", "NUMERIC", mode="NULLABLE"),  # NUMERIC for large values
+    bigquery.SchemaField("total_value_out_wei", "NUMERIC", mode="NULLABLE"),  # NUMERIC for large values
     bigquery.SchemaField("total_value_in_eth", "FLOAT", mode="NULLABLE"),
     bigquery.SchemaField("total_value_out_eth", "FLOAT", mode="NULLABLE"),
     bigquery.SchemaField("unique_counterparties", "INTEGER", mode="NULLABLE"),
@@ -293,12 +293,12 @@ class WalletIngestionPipeline:
             "wallet_address": wallet_address,
             "first_seen_timestamp": first_seen,
             "last_seen_timestamp": last_seen,
-            "balance_wei": balance_info.get("balance_wei"),
+            "balance_wei": str(balance_info.get("balance_wei")) if balance_info.get("balance_wei") else None,
             "balance_eth": balance_info.get("balance_eth"),
             "total_transactions_in": int(wallet_stats.get("total_transactions_in", 0) or 0),
             "total_transactions_out": int(wallet_stats.get("total_transactions_out", 0) or 0),
-            "total_value_in_wei": total_value_in_wei,
-            "total_value_out_wei": total_value_out_wei,
+            "total_value_in_wei": str(total_value_in_wei),  # String for NUMERIC type
+            "total_value_out_wei": str(total_value_out_wei),  # String for NUMERIC type
             "total_value_in_eth": wei_to_ether(total_value_in_wei),
             "total_value_out_eth": wei_to_ether(total_value_out_wei),
             "unique_counterparties": int(wallet_stats.get("unique_counterparties", 0) or 0),

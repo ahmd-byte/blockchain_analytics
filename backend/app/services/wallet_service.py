@@ -53,31 +53,37 @@ class WalletService:
         analytics_dataset = self.settings.bigquery_dataset_analytics
         ml_dataset = self.settings.bigquery_dataset_ml
         
-        # Parameterized query for wallet stats
+        # Parameterized query for wallet stats - computed from raw_transactions
         stats_query = f"""
         SELECT 
-            w.wallet_address,
-            COALESCE(w.total_transactions, 0) as total_transactions,
-            COALESCE(w.total_volume, 0) as total_volume,
-            w.first_transaction_date,
-            w.last_transaction_date,
-            COALESCE(w.unique_counterparties, 0) as unique_counterparties,
-            COALESCE(f.fraud_score, 0) as fraud_score,
-            COALESCE(f.is_suspicious, FALSE) as is_suspicious
-        FROM `{project}.{analytics_dataset}.{self.settings.table_dim_wallet}` w
-        LEFT JOIN `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}` f
-            ON w.wallet_address = f.wallet_address
-        WHERE w.wallet_address = @wallet_address
+            @wallet_address as wallet_address,
+            COUNT(*) as total_transactions,
+            COALESCE(SUM(CAST(value_eth AS FLOAT64)), 0) as total_volume,
+            MIN(DATE(transaction_timestamp)) as first_transaction_date,
+            MAX(DATE(transaction_timestamp)) as last_transaction_date,
+            COUNT(DISTINCT CASE 
+                WHEN from_address = @wallet_address THEN to_address 
+                ELSE from_address 
+            END) as unique_counterparties,
+            -- Placeholder fraud score based on transaction patterns
+            CASE 
+                WHEN SUM(CAST(value_eth AS FLOAT64)) > 1000 THEN 0.3
+                WHEN COUNT(*) > 100 THEN 0.2
+                ELSE 0.1
+            END as fraud_score,
+            FALSE as is_suspicious
+        FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}`
+        WHERE from_address = @wallet_address OR to_address = @wallet_address
         """
         
-        # Parameterized query for daily volumes
+        # Parameterized query for daily volumes - using raw_transactions
         volumes_query = f"""
         SELECT 
             DATE(transaction_timestamp) as date,
             COUNT(*) as transaction_count,
-            COALESCE(SUM(value), 0) as total_value,
-            COALESCE(SUM(CASE WHEN to_address = @wallet_address THEN value ELSE 0 END), 0) as inflow,
-            COALESCE(SUM(CASE WHEN from_address = @wallet_address THEN value ELSE 0 END), 0) as outflow
+            COALESCE(SUM(CAST(value_eth AS FLOAT64)), 0) as total_value,
+            COALESCE(SUM(CASE WHEN to_address = @wallet_address THEN CAST(value_eth AS FLOAT64) ELSE 0 END), 0) as inflow,
+            COALESCE(SUM(CASE WHEN from_address = @wallet_address THEN CAST(value_eth AS FLOAT64) ELSE 0 END), 0) as outflow
         FROM `{project}.{analytics_dataset}.{self.settings.table_fact_transactions}`
         WHERE (from_address = @wallet_address OR to_address = @wallet_address)
             AND DATE(transaction_timestamp) >= DATE_SUB(CURRENT_DATE(), INTERVAL @days DAY)

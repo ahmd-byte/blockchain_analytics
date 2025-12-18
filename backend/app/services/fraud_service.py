@@ -106,15 +106,24 @@ class FraudService:
         # Calculate offset
         offset = (params.page - 1) * params.page_size
         
-        # Main query with pagination
+        # Main query with pagination - using raw_wallets table
         data_query = f"""
         SELECT 
             wallet_address,
-            fraud_score,
-            is_suspicious,
-            tx_count,
-            total_value,
-            last_activity
+            (total_transactions_in + total_transactions_out) as tx_count,
+            CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64) as total_value,
+            last_seen_timestamp as last_activity,
+            -- Simple fraud score based on transaction patterns
+            CASE 
+                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000 THEN 0.8
+                WHEN (total_transactions_in + total_transactions_out) > 500 THEN 0.6
+                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 100 THEN 0.4
+                ELSE 0.2
+            END as fraud_score,
+            CASE 
+                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000 THEN TRUE
+                ELSE FALSE
+            END as is_suspicious
         FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}`
         WHERE {where_clause}
         ORDER BY {sort_by} {sort_order}
@@ -127,13 +136,12 @@ class FraudService:
             bigquery.ScalarQueryParameter("offset", "INT64", offset)
         ])
         
-        # Count query for total results
+        # Count query for total results - using raw_wallets table
         count_query = f"""
         SELECT 
             COUNT(*) as total_count,
-            COUNTIF(is_suspicious = TRUE) as suspicious_count
+            COUNTIF((CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000) as suspicious_count
         FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}`
-        WHERE {where_clause}
         """
         
         # Remove pagination params for count query
@@ -223,4 +231,5 @@ def get_fraud_service() -> FraudService:
         FraudService: Fraud service instance
     """
     return FraudService()
+
 

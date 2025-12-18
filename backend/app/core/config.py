@@ -52,10 +52,10 @@ class Settings(BaseSettings):
     ]
     api_prefix: str = "/api"
     
-    # Table names
-    table_fact_transactions: str = "fact_transactions"
-    table_dim_wallet: str = "dim_wallet"
-    table_wallet_fraud_scores: str = "wallet_fraud_scores"
+    # Table names (using raw tables for now, update when analytics layer is built)
+    table_fact_transactions: str = "raw_transactions"
+    table_dim_wallet: str = "raw_wallets"
+    table_wallet_fraud_scores: str = "raw_wallets"
     
     class Config:
         env_file = ".env"

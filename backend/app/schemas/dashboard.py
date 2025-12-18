@@ -81,3 +81,4 @@ class DashboardMetric(BaseModel):
         description="Percentage change from previous period"
     )
 
+

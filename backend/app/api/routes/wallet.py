@@ -111,3 +111,4 @@ async def get_wallet_details(
             detail=f"Failed to fetch wallet details: {str(e)}"
         )
 
+

@@ -77,3 +77,4 @@ async def get_dashboard_summary(
             detail=f"Failed to fetch dashboard summary: {str(e)}"
         )
 
+

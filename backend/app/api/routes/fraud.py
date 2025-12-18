@@ -161,3 +161,4 @@ async def get_fraud_wallets(
             detail=f"Failed to fetch fraud wallets: {str(e)}"
         )
 
+
