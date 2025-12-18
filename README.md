@@ -1,53 +1,106 @@
 # Blockchain Transaction Analytics & Fraud Detection Platform
 
-A production-ready full-stack platform for analyzing blockchain transactions and detecting fraudulent wallet activity using machine learning.
+A production-ready full-stack platform for analyzing blockchain transactions and detecting fraudulent wallet activity. Features a complete data engineering pipeline that ingests real Ethereum transaction data from Etherscan, transforms it through staging layers, and serves it via a FastAPI backend to a React dashboard.
+
+![Architecture](https://img.shields.io/badge/Architecture-Full%20Stack-blue)
+![Python](https://img.shields.io/badge/Python-3.10+-green)
+![React](https://img.shields.io/badge/React-18+-61DAFB)
+![BigQuery](https://img.shields.io/badge/Database-BigQuery-4285F4)
 
 ## 🏗️ Project Structure
 
 ```
 blockchain-analytics/
-├── frontend/               # React dashboard (Vite + TailwindCSS)
-├── backend/                # FastAPI backend
+├── frontend/                    # React dashboard (Vite + TailwindCSS)
+│   ├── src/
+│   │   ├── pages/              # Dashboard, Wallet, Fraud pages
+│   │   ├── components/         # Reusable UI components
+│   │   └── api/                # API client configuration
+│   └── package.json
+│
+├── backend/                     # FastAPI backend
 │   ├── app/
-│   │   ├── main.py         # Application entry point
-│   │   ├── api/routes/     # API endpoints
-│   │   ├── core/           # Configuration & BigQuery client
-│   │   ├── schemas/        # Pydantic models
-│   │   └── services/       # Business logic
+│   │   ├── main.py             # Application entry point
+│   │   ├── api/routes/         # API endpoints
+│   │   ├── core/               # Configuration & BigQuery client
+│   │   ├── schemas/            # Pydantic models
+│   │   └── services/           # Business logic
 │   └── requirements.txt
-├── data_engineering/
-│   ├── ingestion/          # ETL scripts (placeholder)
-│   ├── sql/                # BigQuery SQL queries
-│   └── dbt/                # dbt models (placeholder)
-├── data_science/           # ML models (placeholder)
-├── notebooks/              # Jupyter notebooks (placeholder)
-├── infra/                  # Deployment configs (placeholder)
+│
+├── data_engineering/            # Complete data pipeline
+│   ├── ingestion/              # Python ingestion scripts
+│   │   ├── config.py           # Configuration management
+│   │   ├── utils.py            # BigQuery helpers, checkpoints
+│   │   ├── etherscan_client.py # Etherscan API V2 client
+│   │   ├── ingest_transactions.py  # Transaction pipeline
+│   │   └── ingest_wallets.py   # Wallet extraction pipeline
+│   ├── sql/
+│   │   ├── staging/            # Staging transformations
+│   │   └── analytics/          # Fact/Dim tables
+│   ├── dbt/                    # dbt models
+│   │   ├── models/staging/     # Staging models
+│   │   └── models/marts/       # Analytics models
+│   ├── airflow/                # Orchestration DAGs
+│   └── requirements.txt
+│
+├── data_science/               # ML models (placeholder)
+├── notebooks/                  # Jupyter notebooks (placeholder)
+├── infra/                      # Deployment configs (placeholder)
 └── README.md
 ```
 
-## 🚀 Features
+## 🌟 Features
+
+### Data Engineering Pipeline
+- **Real-time Ingestion**: Fetch blockchain data from Etherscan API V2
+- **Idempotent Processing**: Checkpoint-based tracking prevents duplicates
+- **BigQuery Integration**: Batch loading optimized for free tier
+- **Modular Design**: Separate raw, staging, and analytics layers
 
 ### Backend API
-- **Dashboard Summary**: Total transactions, volume, wallets, and suspicious count
+- **Dashboard Summary**: Real transaction counts, volume, and wallet stats
 - **Wallet Analytics**: Detailed wallet stats with daily transaction volumes
-- **Fraud Detection**: ML-based fraud scores with filtering and pagination
-- **Health Check**: System status monitoring
+- **Fraud Detection**: Risk scoring with filtering and pagination
+- **Health Check**: System and BigQuery connection monitoring
 
-### Technical Highlights
-- Async FastAPI with BigQuery integration
-- Parameterized queries for SQL injection prevention
-- CORS enabled for frontend integration
-- Comprehensive API documentation (Swagger/ReDoc)
-- Mock data mode for development
+### Frontend Dashboard
+- **Interactive Dashboard**: Real-time metrics and charts
+- **Wallet Explorer**: Search and analyze any Ethereum address
+- **Fraud Detection**: View wallets sorted by risk score
+
+## 🔄 Data Pipeline Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Etherscan     │────▶│   Raw Layer     │────▶│  Staging Layer  │
+│   API V2        │     │ (blockchain_raw)│     │  (cleaned data) │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                        │
+                                                        ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   React         │◀────│   FastAPI       │◀────│ Analytics Layer │
+│   Frontend      │     │   Backend       │     │ (fact/dim)      │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+### BigQuery Datasets
+
+| Dataset | Description |
+|---------|-------------|
+| `blockchain_raw` | Raw ingested data (transactions, wallets) |
+| `blockchain_staging` | Cleaned and normalized data |
+| `blockchain_analytics` | Fact and dimension tables |
+| `blockchain_ml` | ML features and predictions |
 
 ## 🛠️ Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Frontend | React, Vite, TailwindCSS, Recharts |
-| Backend | FastAPI, Pydantic v2, Uvicorn |
+| Frontend | React 18, Vite, TailwindCSS, Recharts, Sonner |
+| Backend | FastAPI, Pydantic v2, Uvicorn, AsyncIO |
 | Database | Google BigQuery |
-| ML | Python (placeholder for models) |
+| Data Engineering | Python, dbt, Airflow |
+| Data Source | Etherscan API V2 |
 
 ## 📦 Quick Start
 
@@ -55,8 +108,37 @@ blockchain-analytics/
 - Python 3.10+
 - Node.js 18+
 - Google Cloud account with BigQuery enabled
+- Etherscan API key (free tier available)
 
-### Backend Setup
+### 1. Data Engineering Setup
+
+```bash
+cd data_engineering
+
+# Create virtual environment
+python -m venv venv
+.\venv\Scripts\activate  # Windows
+source venv/bin/activate  # Linux/Mac
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp env.example .env
+# Edit .env with your credentials:
+# - GOOGLE_CLOUD_PROJECT=your-project-id
+# - ETHERSCAN_API_KEY=your-api-key
+
+# Ingest transaction data
+python -m ingestion.ingest_transactions \
+    --addresses 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045 \
+    --start-block 21000000
+
+# Extract wallet data
+python -m ingestion.ingest_wallets --from-transactions --limit 1000
+```
+
+### 2. Backend Setup
 
 ```bash
 cd backend
@@ -71,13 +153,13 @@ pip install -r requirements.txt
 
 # Configure environment
 cp env.example .env
-# Edit .env with your GCP credentials
+# Edit .env with your GCP project ID
 
 # Run server
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8080
 ```
 
-### Frontend Setup
+### 3. Frontend Setup
 
 ```bash
 cd frontend
@@ -89,70 +171,175 @@ npm install
 npm run dev
 ```
 
+### Access Points
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **API Docs**: http://localhost:8080/docs
+
 ## 📡 API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Health check |
+| `/health` | GET | Health check with BigQuery status |
 | `/api/dashboard/summary` | GET | Dashboard statistics |
-| `/api/wallet/{address}` | GET | Wallet details |
-| `/api/fraud/wallets` | GET | Fraud wallet list |
+| `/api/wallet/{address}` | GET | Wallet details and history |
+| `/api/fraud/wallets` | GET | Fraud wallet list with filters |
 
 ### Example Requests
 
 ```bash
 # Health check
-curl http://localhost:8000/health
+curl http://localhost:8080/health
 
-# Dashboard summary (mock data)
-curl "http://localhost:8000/api/dashboard/summary?use_mock=true"
+# Dashboard summary (real data)
+curl http://localhost:8080/api/dashboard/summary
 
-# Wallet details
-curl "http://localhost:8000/api/wallet/0x742d35Cc?use_mock=true"
+# Wallet details (Vitalik's wallet)
+curl http://localhost:8080/api/wallet/0xd8da6bf26964af9d7eed9e03e53415d37aa96045
 
 # Fraud wallets with filtering
-curl "http://localhost:8000/api/fraud/wallets?is_suspicious=true&use_mock=true"
+curl "http://localhost:8080/api/fraud/wallets?page_size=10&sort_by=fraud_score&sort_order=desc"
+
+# High-risk wallets only
+curl "http://localhost:8080/api/fraud/wallets?min_fraud_score=0.7"
 ```
 
-## 📊 BigQuery Schema
+### Sample API Response
 
-### Tables Required
+```json
+{
+  "total_transactions": 10000,
+  "total_volume": 17619256.14,
+  "total_wallets": 6468,
+  "suspicious_wallet_count": 4,
+  "last_updated": "2025-12-18T15:16:44.979623"
+}
+```
 
-**`blockchain_analytics.fact_transactions`**
-- Transaction records with addresses, values, timestamps
+## 📊 Data Ingestion
 
-**`blockchain_analytics.dim_wallet`**
-- Wallet dimension table with aggregated stats
+### Transaction Ingestion
 
-**`blockchain_ml.wallet_fraud_scores`**
-- ML-generated fraud scores and risk categories
+```bash
+# Ingest transactions for specific addresses
+python -m ingestion.ingest_transactions \
+    --addresses 0x... 0x... \
+    --start-block 19000000 \
+    --resume
 
-See `data_engineering/sql/create_tables.sql` for full schema definitions.
+# From a file
+python -m ingestion.ingest_transactions \
+    --addresses-file addresses.txt \
+    --include-internal
+```
+
+### Wallet Extraction
+
+```bash
+# Extract wallets from transactions
+python -m ingestion.ingest_wallets \
+    --from-transactions \
+    --limit 10000
+
+# Ingest specific addresses with balance enrichment
+python -m ingestion.ingest_wallets \
+    --addresses 0x... 0x...
+```
+
+### Features
+- ✅ Rate-limited API calls (respects Etherscan limits)
+- ✅ Checkpoint-based resumable processing
+- ✅ Deduplication using transaction hashes
+- ✅ Batch loading for BigQuery free tier
+- ✅ Error handling with exponential backoff
+
+## 🗄️ BigQuery Schema
+
+### Raw Layer (`blockchain_raw`)
+
+**`raw_transactions`**
+- `transaction_hash`, `block_number`, `from_address`, `to_address`
+- `value_wei` (NUMERIC), `value_eth` (FLOAT)
+- `gas`, `gas_price`, `gas_used`
+- `transaction_timestamp`, `ingested_at`
+
+**`raw_wallets`**
+- `wallet_address`, `balance_wei`, `balance_eth`
+- `total_transactions_in/out`, `total_value_in/out`
+- `first_seen_timestamp`, `last_seen_timestamp`
+
+### Analytics Layer (`blockchain_analytics`)
+
+**`fact_transactions`** - Partitioned by date, clustered by addresses
+
+**`dim_wallet`** - Wallet dimension with risk indicators
+
+**`dim_time`** - Date dimension (2015-2030)
+
+**`agg_daily_metrics`** - Pre-aggregated daily statistics
 
 ## 🔒 Security Features
 
-- Parameterized SQL queries
-- CORS configuration
-- Input validation with Pydantic
-- Error message sanitization in production
+- ✅ Parameterized SQL queries (SQL injection prevention)
+- ✅ CORS configuration for frontend integration
+- ✅ Input validation with Pydantic
+- ✅ Error message sanitization
+- ✅ Service account authentication for BigQuery
 
 ## 🚧 Development
 
 ### Using Mock Data
 
-Set `DEBUG=true` in `.env` or add `?use_mock=true` to API requests for development without BigQuery.
-
-### Running Tests
+For development without BigQuery, the API supports mock data mode:
 
 ```bash
-cd backend
-pytest --cov=app
+# Set in backend/.env
+DEBUG=True
+
+# Or use query parameter
+curl "http://localhost:8080/api/dashboard/summary?use_mock=true"
+```
+
+### Running dbt Models
+
+```bash
+cd data_engineering/dbt
+
+# Run all models
+dbt run
+
+# Run specific models
+dbt run --select staging+
+dbt run --select marts.core
+
+# Test models
+dbt test
 ```
 
 ### API Documentation
 
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- **Swagger UI**: http://localhost:8080/docs
+- **ReDoc**: http://localhost:8080/redoc
+
+## 📈 Sample Data Statistics
+
+After running the ingestion pipeline:
+
+| Metric | Value |
+|--------|-------|
+| Total Transactions | 10,000+ |
+| Total Volume | 17.6M+ ETH |
+| Unique Wallets | 6,400+ |
+| Date Range | Oct 2024 - Present |
+
+## 🗺️ Roadmap
+
+- [ ] Machine learning fraud detection models
+- [ ] Real-time streaming ingestion
+- [ ] Token transfer tracking (ERC-20)
+- [ ] Multi-chain support (Polygon, BSC)
+- [ ] Alert system for suspicious activity
+- [ ] Kubernetes deployment configs
 
 ## 📝 License
 
@@ -161,9 +348,15 @@ MIT License
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## 👨‍💻 Author
 
+Built as a portfolio project demonstrating:
+- Full-stack development (React + FastAPI)
+- Data engineering (ETL pipelines, BigQuery)
+- Cloud services (Google Cloud Platform)
+- Blockchain data analysis
