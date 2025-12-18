@@ -1,0 +1,82 @@
+# ============================================================
+# Ingress Configuration for Blockchain Analytics Platform
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blockchain-ingress
+  namespace: blockchain-analytics
+  labels:
+    app.kubernetes.io/name: blockchain-analytics
+  annotations:
+    # For GKE with Cloud Load Balancing
+    kubernetes.io/ingress.class: "gce"
+    # For NGINX Ingress Controller
+    # kubernetes.io/ingress.class: "nginx"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    
+    # SSL/TLS
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  # TLS Configuration (uncomment when using SSL)
+  # tls:
+  #   - hosts:
+  #       - blockchain-analytics.example.com
+  #       - api.blockchain-analytics.example.com
+  #     secretName: blockchain-tls-secret
+  rules:
+    # Frontend
+    - host: blockchain-analytics.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blockchain-frontend
+                port:
+                  number: 80
+    # API Backend
+    - host: api.blockchain-analytics.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blockchain-backend
+                port:
+                  number: 80
+
+---
+# ============================================================
+# Alternative: Single domain with path-based routing
+# ============================================================
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: blockchain-ingress-single-domain
+#   namespace: blockchain-analytics
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /$2
+# spec:
+#   rules:
+#     - host: blockchain-analytics.example.com
+#       http:
+#         paths:
+#           - path: /api(/|$)(.*)
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: blockchain-backend
+#                 port:
+#                   number: 80
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: blockchain-frontend
+#                 port:
+#                   number: 80
+

@@ -1,0 +1,136 @@
+# ============================================================
+# Backend Deployment - FastAPI Application
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockchain-backend
+  namespace: blockchain-analytics
+  labels:
+    app.kubernetes.io/name: blockchain-backend
+    app.kubernetes.io/component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blockchain-backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blockchain-backend
+        app.kubernetes.io/component: api
+    spec:
+      serviceAccountName: blockchain-backend-sa
+      containers:
+        - name: backend
+          image: gcr.io/PROJECT_ID/blockchain-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: GOOGLE_CLOUD_PROJECT
+              valueFrom:
+                configMapKeyRef:
+                  name: blockchain-config
+                  key: GOOGLE_CLOUD_PROJECT
+            - name: LOG_LEVEL
+              valueFrom:
+                configMapKeyRef:
+                  name: blockchain-config
+                  key: LOG_LEVEL
+            - name: CORS_ORIGINS
+              valueFrom:
+                configMapKeyRef:
+                  name: blockchain-config
+                  key: CORS_ORIGINS
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: blockchain-backend
+                topologyKey: kubernetes.io/hostname
+
+---
+# ============================================================
+# Backend Service
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockchain-backend
+  namespace: blockchain-analytics
+  labels:
+    app.kubernetes.io/name: blockchain-backend
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: blockchain-backend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+
+---
+# ============================================================
+# Horizontal Pod Autoscaler
+# ============================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: blockchain-backend-hpa
+  namespace: blockchain-analytics
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: blockchain-backend
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+

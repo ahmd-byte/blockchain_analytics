@@ -1,0 +1,78 @@
+# ============================================================
+# Docker Ignore - Blockchain Analytics Platform
+# ============================================================
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.cursor
+
+# Virtual environments
+**/venv
+**/.venv
+**/env
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+
+# Node
+**/node_modules
+npm-debug.log
+yarn-error.log
+
+# Build outputs (we build fresh in Docker)
+**/dist
+**/build
+
+# Test files
+**/.pytest_cache
+**/coverage
+**/.coverage
+**/htmlcov
+
+# Environment files (sensitive)
+**/.env
+**/.env.local
+**/.env.*.local
+**/credentials
+
+# Notebooks output
+**/.ipynb_checkpoints
+**/*.ipynb
+
+# Data files
+**/*.csv
+**/*.parquet
+**/*.json
+!**/package.json
+!**/package-lock.json
+
+# Logs
+**/*.log
+**/logs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Infrastructure (not needed in app containers)
+infra/k8s
+infra/scripts
+infra/env
+
+# Terraform
+**/.terraform
+*.tfstate*
+

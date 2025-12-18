@@ -1,0 +1,11 @@
+# ============================================================
+# Kubernetes Namespace for Blockchain Analytics Platform
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blockchain-analytics
+  labels:
+    app.kubernetes.io/name: blockchain-analytics
+    app.kubernetes.io/component: infrastructure
+

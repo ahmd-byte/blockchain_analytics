@@ -1,0 +1,97 @@
+# ============================================================
+# Blockchain Analytics Platform - Docker Compose
+# Local Development Environment
+# ============================================================
+# 
+# Usage:
+#   Development:  docker-compose up -d
+#   Production:   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#   Logs:         docker-compose logs -f [service]
+#   Stop:         docker-compose down
+#   Rebuild:      docker-compose up -d --build
+#
+# ============================================================
+
+version: '3.9'
+
+services:
+  # ============================================================
+  # Backend API Service (FastAPI)
+  # ============================================================
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/backend.Dockerfile
+      target: production
+    container_name: blockchain-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials/service-account.json
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      - WORKERS=${BACKEND_WORKERS:-4}
+    volumes:
+      # Mount service account credentials (required for BigQuery)
+      - ${GOOGLE_CREDENTIALS_PATH:-./credentials}:/app/credentials:ro
+      # Mount logs directory
+      - backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - blockchain-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+
+  # ============================================================
+  # Frontend Service (React + Nginx)
+  # ============================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend.Dockerfile
+      target: production
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8080}
+        - VITE_APP_NAME=${VITE_APP_NAME:-Blockchain Analytics}
+    container_name: blockchain-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - blockchain-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  blockchain-network:
+    driver: bridge
+    name: blockchain-analytics-network
+
+# ============================================================
+# Volumes
+# ============================================================
+volumes:
+  backend-logs:
+    name: blockchain-backend-logs
+

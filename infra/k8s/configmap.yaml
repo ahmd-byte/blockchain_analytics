@@ -1,0 +1,21 @@
+# ============================================================
+# ConfigMap for Blockchain Analytics Platform
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blockchain-config
+  namespace: blockchain-analytics
+  labels:
+    app.kubernetes.io/name: blockchain-analytics
+data:
+  # Google Cloud Configuration
+  GOOGLE_CLOUD_PROJECT: "your-project-id"
+  
+  # Backend Configuration
+  LOG_LEVEL: "INFO"
+  CORS_ORIGINS: "https://blockchain-analytics.example.com"
+  
+  # Frontend Configuration
+  VITE_APP_NAME: "Blockchain Analytics"
+

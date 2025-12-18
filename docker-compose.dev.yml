@@ -1,0 +1,49 @@
+# ============================================================
+# Blockchain Analytics Platform - Docker Compose (Development)
+# Hot-reload enabled for development
+# ============================================================
+#
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# ============================================================
+
+version: '3.9'
+
+services:
+  # ============================================================
+  # Backend API Service (Development Mode)
+  # ============================================================
+  backend:
+    build:
+      target: production  # Could use a dev target if created
+    volumes:
+      # Mount source code for hot-reload
+      - ./backend/app:/app/app:ro
+      - ${GOOGLE_CREDENTIALS_PATH:-./credentials}:/app/credentials:ro
+    environment:
+      - LOG_LEVEL=DEBUG
+      - WORKERS=1  # Single worker for development
+    command: ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload"]
+
+  # ============================================================
+  # Frontend Service (Development Mode with Vite)
+  # ============================================================
+  frontend-dev:
+    image: node:20-alpine
+    container_name: blockchain-frontend-dev
+    working_dir: /app
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Anonymous volume to prevent overwriting
+    environment:
+      - VITE_API_URL=http://localhost:8080
+      - VITE_APP_NAME=Blockchain Analytics (Dev)
+    command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+    networks:
+      - blockchain-network
+    depends_on:
+      - backend
+
