@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Application settings
     app_name: str = "Blockchain Analytics API"
     app_version: str = "1.0.0"
-    debug: bool = False
+    debug: bool = True  # Set to False in production
     
     # BigQuery settings
     google_cloud_project: str = os.getenv("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
@@ -44,8 +44,11 @@ class Settings(BaseSettings):
     cors_origins: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:8080",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
     ]
     api_prefix: str = "/api"
     
