@@ -103,3 +103,4 @@ OPTIONS (
 -- Use CLUSTER BY and PARTITION BY for query optimization.
 -- Consider creating materialized views for frequently accessed aggregations.
 
+

@@ -116,3 +116,4 @@ WHERE f.is_suspicious = TRUE
 ORDER BY f.total_value DESC
 LIMIT 10;
 
+

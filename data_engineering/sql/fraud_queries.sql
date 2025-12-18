@@ -175,3 +175,4 @@ FROM `your-project-id.blockchain_ml.wallet_fraud_scores`
 GROUP BY model_version
 ORDER BY last_prediction DESC;
 
+

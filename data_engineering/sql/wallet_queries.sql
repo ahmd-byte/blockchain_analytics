@@ -137,3 +137,4 @@ FROM `your-project-id.blockchain_analytics.dim_wallet`
 ORDER BY total_volume DESC
 LIMIT 100;
 
+
