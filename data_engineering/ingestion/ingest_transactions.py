@@ -48,10 +48,10 @@ RAW_TRANSACTIONS_SCHEMA = [
     bigquery.SchemaField("transaction_timestamp", "TIMESTAMP", mode="REQUIRED"),
     bigquery.SchemaField("from_address", "STRING", mode="REQUIRED"),
     bigquery.SchemaField("to_address", "STRING", mode="NULLABLE"),
-    bigquery.SchemaField("value_wei", "INTEGER", mode="REQUIRED"),
+    bigquery.SchemaField("value_wei", "NUMERIC", mode="REQUIRED"),  # NUMERIC for large values
     bigquery.SchemaField("value_eth", "FLOAT", mode="REQUIRED"),
     bigquery.SchemaField("gas", "INTEGER", mode="NULLABLE"),
-    bigquery.SchemaField("gas_price", "INTEGER", mode="NULLABLE"),
+    bigquery.SchemaField("gas_price", "NUMERIC", mode="NULLABLE"),  # NUMERIC for large values
     bigquery.SchemaField("gas_used", "INTEGER", mode="NULLABLE"),
     bigquery.SchemaField("nonce", "INTEGER", mode="NULLABLE"),
     bigquery.SchemaField("transaction_index", "INTEGER", mode="NULLABLE"),
@@ -98,7 +98,7 @@ class TransactionIngestionPipeline:
         # Configuration
         self.raw_dataset = CONFIG.bigquery.raw_dataset
         self.raw_table = CONFIG.bigquery.raw_transactions_table
-        self.batch_size = CONFIG.ingestion.batch_size
+        self.batch_size = CONFIG.batch_size
         
         # Statistics
         self.stats = {
@@ -132,6 +132,10 @@ class TransactionIngestionPipeline:
             value_wei
         )
         
+        # Parse gas_price safely (can be very large)
+        gas_price = tx.get("gasPrice", "0")
+        gas_price_int = int(gas_price) if gas_price else 0
+        
         return {
             "transaction_hash": tx.get("hash", "").lower(),
             "block_number": int(tx.get("blockNumber", 0)),
@@ -139,10 +143,10 @@ class TransactionIngestionPipeline:
             "transaction_timestamp": unix_to_datetime(timestamp).isoformat(),
             "from_address": normalize_address(tx.get("from", "")),
             "to_address": normalize_address(tx.get("to", "")) if tx.get("to") else None,
-            "value_wei": value_wei,
+            "value_wei": str(value_wei),  # String for NUMERIC type
             "value_eth": wei_to_ether(value_wei),
             "gas": int(tx.get("gas", 0)) if tx.get("gas") else None,
-            "gas_price": int(tx.get("gasPrice", 0)) if tx.get("gasPrice") else None,
+            "gas_price": str(gas_price_int) if gas_price_int else None,  # String for NUMERIC type
             "gas_used": int(tx.get("gasUsed", 0)) if tx.get("gasUsed") else None,
             "nonce": int(tx.get("nonce", 0)) if tx.get("nonce") else None,
             "transaction_index": int(tx.get("transactionIndex", 0)) if tx.get("transactionIndex") else None,

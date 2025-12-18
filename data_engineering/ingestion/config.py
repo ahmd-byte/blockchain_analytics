@@ -18,7 +18,8 @@ load_dotenv()
 class EtherscanConfig:
     """Etherscan API configuration."""
     api_key: str = field(default_factory=lambda: os.getenv("ETHERSCAN_API_KEY", ""))
-    base_url: str = "https://api.etherscan.io/api"
+    base_url: str = "https://api.etherscan.io/v2/api"  # V2 API
+    chain_id: int = 1  # Ethereum mainnet
     rate_limit: int = 5  # requests per second
     max_retries: int = 3
     timeout: int = 30

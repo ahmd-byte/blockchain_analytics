@@ -257,7 +257,9 @@ class BigQueryHelper:
         schema: List[bigquery.SchemaField] = None
     ) -> int:
         """
-        Insert rows into a BigQuery table.
+        Insert rows into a BigQuery table using batch loading.
+        
+        Uses load job instead of streaming insert to support free tier.
         
         Args:
             dataset_id: Target dataset ID
@@ -268,6 +270,9 @@ class BigQueryHelper:
         Returns:
             int: Number of rows inserted
         """
+        import json
+        import io
+        
         if not rows:
             return 0
         
@@ -284,13 +289,31 @@ class BigQueryHelper:
             self.client.create_table(table)
             self.logger.info(f"Created table {table_ref}")
         
-        errors = self.client.insert_rows_json(table_ref, rows)
+        # Use load job instead of streaming insert (supports free tier)
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+        )
         
-        if errors:
-            self.logger.error(f"Errors inserting rows: {errors}")
-            raise Exception(f"BigQuery insert errors: {errors}")
+        # Convert rows to newline-delimited JSON
+        json_data = "\n".join(json.dumps(row) for row in rows)
+        json_file = io.BytesIO(json_data.encode('utf-8'))
         
-        self.logger.info(f"Inserted {len(rows)} rows into {table_ref}")
+        # Load data using load job
+        load_job = self.client.load_table_from_file(
+            json_file,
+            table_ref,
+            job_config=job_config
+        )
+        
+        # Wait for job to complete
+        load_job.result()
+        
+        if load_job.errors:
+            self.logger.error(f"Errors loading rows: {load_job.errors}")
+            raise Exception(f"BigQuery load errors: {load_job.errors}")
+        
+        self.logger.info(f"Loaded {len(rows)} rows into {table_ref}")
         return len(rows)
     
     def get_max_value(
@@ -395,13 +418,16 @@ class CheckpointManager:
     
     def set_checkpoint(self, pipeline_name: str, key: str, value: Any) -> None:
         """
-        Set a checkpoint value.
+        Set a checkpoint value using batch loading.
         
         Args:
             pipeline_name: Name of the pipeline
             key: Checkpoint key
             value: Value to store
         """
+        import json
+        import io
+        
         self._ensure_checkpoint_table()
         
         row = {
@@ -412,6 +438,22 @@ class CheckpointManager:
         }
         
         table_ref = f"{self.bq.project_id}.{self.dataset}.{self.table}"
-        self.bq.client.insert_rows_json(table_ref, [row])
+        
+        # Use load job instead of streaming insert (supports free tier)
+        job_config = bigquery.LoadJobConfig(
+            source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON,
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+        )
+        
+        json_data = json.dumps(row)
+        json_file = io.BytesIO(json_data.encode('utf-8'))
+        
+        load_job = self.bq.client.load_table_from_file(
+            json_file,
+            table_ref,
+            job_config=job_config
+        )
+        load_job.result()  # Wait for completion
+        
         self.logger.debug(f"Set checkpoint {pipeline_name}.{key} = {value}")
 

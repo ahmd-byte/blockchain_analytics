@@ -34,6 +34,7 @@ class EtherscanClient:
         """
         self.api_key = api_key or CONFIG.etherscan.api_key
         self.base_url = CONFIG.etherscan.base_url
+        self.chain_id = CONFIG.etherscan.chain_id
         self.rate_limit = CONFIG.etherscan.rate_limit
         self.timeout = CONFIG.etherscan.timeout
         self.logger = setup_logger(__name__)
@@ -65,6 +66,7 @@ class EtherscanClient:
         self._rate_limit()
         
         params["apikey"] = self.api_key
+        params["chainid"] = self.chain_id
         
         response = requests.get(
             self.base_url,
