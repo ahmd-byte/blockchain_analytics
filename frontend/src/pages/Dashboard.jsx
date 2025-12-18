@@ -1,0 +1,156 @@
+import { useEffect, useState } from 'react';
+import apiClient from '../api/apiClient';
+import StatCard from '../components/StatCard';
+import TransactionChart from '../components/TransactionChart';
+import FraudTable from '../components/FraudTable';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Activity, Wallet, ShieldAlert, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+
+const Dashboard = () => {
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Mock data for initial dev or real call
+                // const response = await apiClient.get('/dashboard/summary');
+                // setData(response.data);
+
+                // Using timeout to simulate API call since backend might not be ready
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                setData({
+                    totalVolume: "$12.4M",
+                    volumeTrend: "up",
+                    volumeTrendValue: "12%",
+                    activeWallets: "1,234",
+                    walletsTrend: "up",
+                    walletsTrendValue: "5%",
+                    fraudAttempts: "23",
+                    fraudTrend: "down",
+                    fraudTrendValue: "2%",
+                    riskLevel: "Low",
+                    transactionHistory: [
+                        { name: 'Mon', value: 4000 },
+                        { name: 'Tue', value: 3000 },
+                        { name: 'Wed', value: 5000 },
+                        { name: 'Thu', value: 2780 },
+                        { name: 'Fri', value: 6890 },
+                        { name: 'Sat', value: 4390 },
+                        { name: 'Sun', value: 7490 },
+                    ],
+                    recentFraud: [
+                        { hash: "0x123...abc", from: "0xabc...123", to: "0xdef...456", amount: "4.2", riskScore: 92 },
+                        { hash: "0x456...def", from: "0xghi...789", to: "0xjkl...012", amount: "1.5", riskScore: 65 },
+                        { hash: "0x789...ghi", from: "0xmno...345", to: "0xpqr...678", amount: "10.0", riskScore: 45 },
+                    ]
+                });
+            } catch (error) {
+                console.error("Failed to fetch dashboard data", error);
+                // toast is handled by interceptor, but we can add specific logic here
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    const fetchRealData = async () => {
+        setLoading(true);
+        try {
+            const response = await apiClient.get('/dashboard/summary');
+            setData(prev => ({ ...prev, ...response.data })); // Merge mock and real
+            toast.success("Data updated from backend");
+        } catch (error) {
+            // Error already toasted
+            console.log("Using mock data due to backend error");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-10 w-32" />
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <Skeleton key={i} className="h-32 rounded-xl" />
+                    ))}
+                </div>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <Skeleton className="col-span-4 h-[350px] rounded-xl" />
+                    <Skeleton className="col-span-3 h-[350px] rounded-xl" />
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                <div className="flex items-center gap-2">
+                    <Button onClick={fetchRealData} size="sm" className="bg-[#D40000] hover:bg-[#b30000] text-white">Refresh Data</Button>
+                </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <StatCard
+                    title="Total Volume"
+                    value={data?.totalVolume}
+                    icon={Activity}
+                    trend={data?.volumeTrend}
+                    trendValue={data?.volumeTrendValue}
+                    className="border-l-4 border-l-[#D40000]"
+                />
+                <StatCard
+                    title="Active Wallets"
+                    value={data?.activeWallets}
+                    icon={Wallet}
+                    trend={data?.walletsTrend}
+                    trendValue={data?.walletsTrendValue}
+                    className="border-l-4 border-l-stone-900 dark:border-l-zinc-700"
+                />
+                <StatCard
+                    title="Fraud Attempts"
+                    value={data?.fraudAttempts}
+                    icon={ShieldAlert}
+                    trend={data?.fraudTrend}
+                    trendValue={data?.fraudTrendValue}
+                    className="border-l-4 border-l-[#D40000]"
+                />
+                <StatCard
+                    title="Network Status"
+                    value="Optimal"
+                    icon={TrendingUp}
+                    trend="neutral"
+                    className="border-l-4 border-l-stone-900 dark:border-l-zinc-700"
+                />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <TransactionChart data={data?.transactionHistory} />
+                <div className="col-span-3">
+                    <div className="rounded-xl border bg-card text-card-foreground shadow h-full transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 border-black/5 dark:border-white/5">
+                        <div className="p-6 flex flex-col space-y-1.5 pb-2">
+                            <h3 className="font-semibold leading-none tracking-tight">Recent Alerts</h3>
+                            <p className="text-sm text-muted-foreground">Latest transactions flagged by AI.</p>
+                        </div>
+                        <div className="p-6 pt-0">
+                            <FraudTable transactions={data?.recentFraud} />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Dashboard;
