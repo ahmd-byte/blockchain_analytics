@@ -1,0 +1,38 @@
+# Blockchain Analytics API - Python Dependencies
+# Python 3.10+ required
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+
+# Data Validation
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Google Cloud / BigQuery
+google-cloud-bigquery==3.14.1
+google-auth==2.26.1
+db-dtypes==1.2.0
+
+# HTTP Client (for testing)
+httpx==0.26.0
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Development & Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+
+# Type Checking (optional, for development)
+mypy==1.8.0
+
+# Code Formatting (optional, for development)
+black==24.1.0
+isort==5.13.2
+
+# Linting (optional, for development)
+ruff==0.1.13
+
