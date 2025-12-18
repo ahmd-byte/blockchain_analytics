@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: stg_blockchain__transactions
+    description: Staged and cleaned transaction data
+    columns:
+      - name: transaction_id
+        description: Unique transaction identifier (hash + block)
+        tests:
+          - unique
+          - not_null
+      - name: transaction_hash
+        description: Transaction hash (lowercase)
+        tests:
+          - not_null
+      - name: block_number
+        description: Block number
+        tests:
+          - not_null
+      - name: from_address
+        description: Sender address (lowercase)
+        tests:
+          - not_null
+      - name: to_address
+        description: Receiver address (lowercase, null for contract creation)
+      - name: value_eth
+        description: Transaction value in ETH
+      - name: transaction_type
+        description: Transaction classification
+        tests:
+          - accepted_values:
+              values: ['contract_creation', 'contract_call', 'value_transfer', 'other']
+              
+  - name: stg_blockchain__wallets
+    description: Staged and cleaned wallet data
+    columns:
+      - name: wallet_id
+        description: Unique wallet identifier (address)
+        tests:
+          - unique
+          - not_null
+      - name: wallet_address
+        description: Ethereum address (lowercase)
+        tests:
+          - not_null
+      - name: wallet_type
+        description: Wallet classification
+        tests:
+          - accepted_values:
+              values: ['contract', 'receive_only', 'send_only', 'high_activity', 
+                       'medium_activity', 'low_activity', 'minimal_activity']
+

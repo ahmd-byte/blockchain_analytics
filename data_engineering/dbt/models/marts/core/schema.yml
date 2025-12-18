@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: dim_time
+    description: Time dimension table for analytics
+    columns:
+      - name: time_key
+        description: Surrogate key (YYYYMMDD format)
+        tests:
+          - unique
+          - not_null
+      - name: full_date
+        description: Full date
+        tests:
+          - unique
+          - not_null
+      - name: year
+        description: Year number
+      - name: month
+        description: Month number (1-12)
+      - name: day_of_week
+        description: Day of week (1-7, Sunday=1)
+
+  - name: dim_wallet
+    description: Wallet dimension with attributes and metrics
+    columns:
+      - name: wallet_key
+        description: Surrogate key (wallet address)
+        tests:
+          - unique
+          - not_null
+      - name: wallet_address
+        description: Ethereum address
+        tests:
+          - not_null
+      - name: wallet_type
+        description: Wallet classification
+      - name: balance_tier
+        description: Balance tier classification
+        tests:
+          - accepted_values:
+              values: ['whale', 'large', 'medium', 'small', 'dust']
+      - name: risk_level
+        description: Risk level classification
+
+  - name: fct_transactions
+    description: Transaction fact table
+    columns:
+      - name: transaction_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: transaction_hash
+        description: Original transaction hash
+        tests:
+          - not_null
+      - name: time_key
+        description: Foreign key to dim_time
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: time_key
+      - name: from_wallet_key
+        description: Foreign key to dim_wallet (sender)
+        tests:
+          - not_null
+      - name: value_tier
+        description: Value tier classification
+        tests:
+          - accepted_values:
+              values: ['zero', 'micro', 'small', 'medium', 'large', 'very_large', 'whale']
+

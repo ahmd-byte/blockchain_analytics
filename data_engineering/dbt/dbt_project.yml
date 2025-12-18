@@ -1,0 +1,102 @@
+# ============================================================================
+# dbt Project Configuration
+# ============================================================================
+# Blockchain Analytics dbt Project
+# 
+# This project transforms raw blockchain data into analytics-ready tables
+# using dbt best practices for data modeling.
+# ============================================================================
+
+name: 'blockchain_analytics'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'blockchain_analytics'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# ============================================================================
+# Model Configurations
+# ============================================================================
+models:
+  blockchain_analytics:
+    # Staging layer - 1:1 with source tables
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ['staging']
+      
+    # Intermediate layer - business logic transformations
+    intermediate:
+      +materialized: ephemeral
+      +schema: intermediate
+      +tags: ['intermediate']
+      
+    # Marts layer - final analytics tables
+    marts:
+      +materialized: table
+      +schema: analytics
+      +tags: ['marts']
+      
+      # Core dimension and fact tables
+      core:
+        +materialized: table
+        +tags: ['core']
+        
+      # Aggregation tables for dashboards
+      aggregates:
+        +materialized: incremental
+        +tags: ['aggregates']
+
+# ============================================================================
+# Variables
+# ============================================================================
+vars:
+  # Default date range for incremental models
+  start_date: '2015-07-30'  # Ethereum mainnet launch
+  
+  # Data quality thresholds
+  min_data_quality_score: 0.5
+  
+  # Fraud detection thresholds
+  high_fraud_score_threshold: 0.7
+  suspicious_transaction_threshold: 100  # ETH
+
+# ============================================================================
+# Seeds Configuration
+# ============================================================================
+seeds:
+  blockchain_analytics:
+    +schema: seeds
+    known_exchanges:
+      +column_types:
+        wallet_address: string
+        exchange_name: string
+        category: string
+    known_contracts:
+      +column_types:
+        contract_address: string
+        contract_name: string
+        contract_type: string
+
+# ============================================================================
+# Snapshots Configuration
+# ============================================================================
+snapshots:
+  blockchain_analytics:
+    +target_schema: snapshots
+    +strategy: timestamp
+    +updated_at: updated_at
+

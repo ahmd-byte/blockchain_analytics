@@ -1,0 +1,41 @@
+# ============================================================================
+# dbt Profile Configuration (Example)
+# ============================================================================
+# Copy this file to ~/.dbt/profiles.yml and update with your credentials
+# ============================================================================
+
+blockchain_analytics:
+  target: dev
+  outputs:
+    # Development environment
+    dev:
+      type: bigquery
+      method: service-account
+      project: your-gcp-project-id
+      dataset: blockchain_dev
+      threads: 4
+      timeout_seconds: 300
+      location: US
+      keyfile: /path/to/your/service-account-key.json
+      
+    # Production environment
+    prod:
+      type: bigquery
+      method: service-account
+      project: your-gcp-project-id
+      dataset: blockchain_prod
+      threads: 8
+      timeout_seconds: 600
+      location: US
+      keyfile: /path/to/your/service-account-key.json
+      
+    # CI/CD environment (uses oauth or application default credentials)
+    ci:
+      type: bigquery
+      method: oauth
+      project: your-gcp-project-id
+      dataset: blockchain_ci
+      threads: 4
+      timeout_seconds: 300
+      location: US
+

@@ -1,0 +1,78 @@
+version: 2
+
+sources:
+  - name: blockchain_raw
+    description: Raw blockchain data ingested from Etherscan and other sources
+    database: "{{ env_var('BIGQUERY_PROJECT', var('project_id', 'your-project-id')) }}"
+    schema: blockchain_raw
+    
+    tables:
+      - name: raw_transactions
+        description: Raw transaction data from blockchain
+        columns:
+          - name: transaction_hash
+            description: Unique transaction hash
+            tests:
+              - not_null
+          - name: block_number
+            description: Block number containing the transaction
+            tests:
+              - not_null
+          - name: from_address
+            description: Sender address
+            tests:
+              - not_null
+          - name: to_address
+            description: Receiver address (null for contract creation)
+          - name: value_wei
+            description: Transaction value in Wei
+          - name: value_eth
+            description: Transaction value in Ether
+          - name: transaction_timestamp
+            description: Transaction timestamp
+            tests:
+              - not_null
+          - name: gas
+            description: Gas limit
+          - name: gas_price
+            description: Gas price in Wei
+          - name: gas_used
+            description: Actual gas used
+          - name: ingested_at
+            description: Data ingestion timestamp
+            tests:
+              - not_null
+              
+      - name: raw_wallets
+        description: Raw wallet data extracted from transactions
+        columns:
+          - name: wallet_address
+            description: Ethereum wallet address
+            tests:
+              - not_null
+              - unique
+          - name: balance_wei
+            description: Current balance in Wei
+          - name: balance_eth
+            description: Current balance in Ether
+          - name: total_transactions_in
+            description: Count of incoming transactions
+          - name: total_transactions_out
+            description: Count of outgoing transactions
+          - name: ingested_at
+            description: Data ingestion timestamp
+            tests:
+              - not_null
+
+      - name: ingestion_checkpoints
+        description: Checkpoints for idempotent data ingestion
+        columns:
+          - name: pipeline_name
+            description: Name of the ingestion pipeline
+          - name: checkpoint_key
+            description: Checkpoint identifier
+          - name: checkpoint_value
+            description: Checkpoint value (e.g., last processed block)
+          - name: updated_at
+            description: Last update timestamp
+
