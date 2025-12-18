@@ -106,25 +106,20 @@ class FraudService:
         # Calculate offset
         offset = (params.page - 1) * params.page_size
         
-        # Main query with pagination - using raw_wallets table
+        # Query from ML-generated fraud scores table
+        # Joins with wallet features for tx_count and total_value
         data_query = f"""
         SELECT 
-            wallet_address,
-            (total_transactions_in + total_transactions_out) as tx_count,
-            CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64) as total_value,
-            last_seen_timestamp as last_activity,
-            -- Simple fraud score based on transaction patterns
-            CASE 
-                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000 THEN 0.8
-                WHEN (total_transactions_in + total_transactions_out) > 500 THEN 0.6
-                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 100 THEN 0.4
-                ELSE 0.2
-            END as fraud_score,
-            CASE 
-                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000 THEN TRUE
-                ELSE FALSE
-            END as is_suspicious
-        FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}`
+            fs.wallet_address,
+            fs.fraud_score,
+            fs.risk_category,
+            fs.scored_at as last_activity,
+            CASE WHEN fs.fraud_score >= 0.7 THEN TRUE ELSE FALSE END as is_suspicious,
+            COALESCE(wf.tx_count, 0) as tx_count,
+            COALESCE(wf.total_value, 0) as total_value
+        FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}` fs
+        LEFT JOIN `{project}.{ml_dataset}.{self.settings.table_wallet_features}` wf
+            ON fs.wallet_address = wf.wallet_address
         WHERE {where_clause}
         ORDER BY {sort_by} {sort_order}
         LIMIT @page_size
@@ -136,11 +131,11 @@ class FraudService:
             bigquery.ScalarQueryParameter("offset", "INT64", offset)
         ])
         
-        # Count query for total results - using raw_wallets table
+        # Count query for total results
         count_query = f"""
         SELECT 
             COUNT(*) as total_count,
-            COUNTIF((CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000) as suspicious_count
+            COUNTIF(fraud_score >= 0.7) as suspicious_count
         FROM `{project}.{ml_dataset}.{self.settings.table_wallet_fraud_scores}`
         """
         
@@ -161,9 +156,9 @@ class FraudService:
                     is_suspicious=bool(row.get("is_suspicious", False)),
                     tx_count=int(row.get("tx_count", 0)),
                     total_value=float(row.get("total_value", 0)),
-                    risk_category=self._get_risk_category(float(row.get("fraud_score", 0))),
+                    risk_category=row.get("risk_category") or self._get_risk_category(float(row.get("fraud_score", 0))),
                     last_activity=row.get("last_activity"),
-                    flagged_reason="High-risk transaction patterns detected" if row.get("is_suspicious") else None
+                    flagged_reason="ML-detected anomalous behavior" if row.get("is_suspicious") else None
                 )
                 for row in data_results
             ]
@@ -177,7 +172,81 @@ class FraudService:
             )
             
         except Exception as e:
+            # If ML table doesn't exist, try fallback to raw_wallets
+            if "Not found" in str(e):
+                return await self._get_fraud_wallets_fallback(params)
             raise Exception(f"Failed to fetch fraud wallets: {str(e)}")
+    
+    async def _get_fraud_wallets_fallback(
+        self,
+        params: FraudQueryParams
+    ) -> FraudWalletListResponse:
+        """
+        Fallback method when ML tables don't exist.
+        Uses raw_wallets with heuristic-based fraud scoring.
+        """
+        project = self.settings.google_cloud_project
+        raw_dataset = self.settings.bigquery_dataset_raw
+        
+        offset = (params.page - 1) * params.page_size
+        
+        # Fallback query using raw_wallets
+        data_query = f"""
+        SELECT 
+            wallet_address,
+            (total_transactions_in + total_transactions_out) as tx_count,
+            CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64) as total_value,
+            last_seen_timestamp as last_activity,
+            CASE 
+                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000 THEN 0.8
+                WHEN (total_transactions_in + total_transactions_out) > 500 THEN 0.6
+                WHEN (CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 100 THEN 0.4
+                ELSE 0.2
+            END as fraud_score
+        FROM `{project}.{raw_dataset}.raw_wallets`
+        ORDER BY fraud_score DESC
+        LIMIT @page_size
+        OFFSET @offset
+        """
+        
+        count_query = f"""
+        SELECT 
+            COUNT(*) as total_count,
+            COUNTIF((CAST(total_value_in_eth AS FLOAT64) + CAST(total_value_out_eth AS FLOAT64)) > 1000) as suspicious_count
+        FROM `{project}.{raw_dataset}.raw_wallets`
+        """
+        
+        query_params = [
+            bigquery.ScalarQueryParameter("page_size", "INT64", params.page_size),
+            bigquery.ScalarQueryParameter("offset", "INT64", offset)
+        ]
+        
+        data_results = await self.bq_client.execute_query(data_query, query_params)
+        count_results = await self.bq_client.execute_query(count_query)
+        
+        count_data = count_results[0] if count_results else {}
+        
+        wallets = [
+            FraudWallet(
+                wallet_address=row.get("wallet_address", ""),
+                fraud_score=float(row.get("fraud_score", 0)),
+                is_suspicious=float(row.get("fraud_score", 0)) >= 0.7,
+                tx_count=int(row.get("tx_count", 0)),
+                total_value=float(row.get("total_value", 0)),
+                risk_category=self._get_risk_category(float(row.get("fraud_score", 0))),
+                last_activity=row.get("last_activity"),
+                flagged_reason="Heuristic-based detection (ML model not yet run)" if float(row.get("fraud_score", 0)) >= 0.7 else None
+            )
+            for row in data_results
+        ]
+        
+        return FraudWalletListResponse(
+            wallets=wallets,
+            total_count=int(count_data.get("total_count", 0)),
+            page=params.page,
+            page_size=params.page_size,
+            suspicious_count=int(count_data.get("suspicious_count", 0))
+        )
     
     async def get_fraud_wallets_mock(
         self,
