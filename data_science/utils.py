@@ -72,7 +72,7 @@ class BigQueryMLHelper:
             or CONFIG.bigquery.project_id 
             or os.getenv("GOOGLE_CLOUD_PROJECT") 
             or os.getenv("GCP_PROJECT")
-            or "blockchain-481614"  # Fallback to known project
+            or ""
         )
         
         if not self.project_id:
