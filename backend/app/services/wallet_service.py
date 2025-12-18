@@ -125,7 +125,7 @@ class WalletService:
             
             daily_volumes = [
                 DailyTransactionVolume(
-                    date=row.get("date"),
+                    transaction_date=row.get("date"),
                     transaction_count=int(row.get("transaction_count", 0)),
                     total_value=float(row.get("total_value", 0)),
                     inflow=float(row.get("inflow", 0)),
@@ -165,7 +165,7 @@ class WalletService:
             current_date = base_date - timedelta(days=i)
             daily_volumes.append(
                 DailyTransactionVolume(
-                    date=current_date,
+                    transaction_date=current_date,
                     transaction_count=50 + (i * 3) % 100,
                     total_value=round(1000 + (i * 100) % 5000, 2),
                     inflow=round(500 + (i * 50) % 2500, 2),

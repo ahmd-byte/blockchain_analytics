@@ -7,7 +7,7 @@ including wallet details and transaction history.
 
 from pydantic import BaseModel, Field
 from typing import Optional
-from datetime import date, datetime
+import datetime
 
 
 class DailyTransactionVolume(BaseModel):
@@ -15,14 +15,14 @@ class DailyTransactionVolume(BaseModel):
     Daily transaction volume for a wallet.
     
     Attributes:
-        date: Transaction date
+        transaction_date: Transaction date
         transaction_count: Number of transactions on that date
         total_value: Total value transacted on that date
         inflow: Total incoming value
         outflow: Total outgoing value
     """
     
-    date: date = Field(..., description="Transaction date")
+    transaction_date: datetime.date = Field(..., description="Transaction date", serialization_alias="date")
     transaction_count: int = Field(
         ..., 
         description="Number of transactions",
@@ -43,6 +43,8 @@ class DailyTransactionVolume(BaseModel):
         description="Total outgoing value",
         ge=0
     )
+    
+    model_config = {"populate_by_name": True}
 
 
 class WalletStats(BaseModel):
@@ -76,11 +78,11 @@ class WalletStats(BaseModel):
         description="Total transaction volume",
         ge=0
     )
-    first_transaction_date: Optional[date] = Field(
+    first_transaction_date: Optional[datetime.date] = Field(
         default=None, 
         description="Date of first transaction"
     )
-    last_transaction_date: Optional[date] = Field(
+    last_transaction_date: Optional[datetime.date] = Field(
         default=None, 
         description="Date of most recent transaction"
     )
