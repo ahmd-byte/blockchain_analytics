@@ -3,6 +3,7 @@ import apiClient from '../api/apiClient';
 import StatCard from '../components/StatCard';
 import TransactionChart from '../components/TransactionChart';
 import FraudTable from '../components/FraudTable';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Activity, Wallet, ShieldAlert, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 
 const Dashboard = () => {
     const [loading, setLoading] = useState(true);
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
     const [data, setData] = useState(null);
     const [fraudData, setFraudData] = useState([]);
 
@@ -108,12 +110,17 @@ const Dashboard = () => {
             ]);
         } finally {
             setLoading(false);
+            setIsInitialLoad(false);
         }
     };
 
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    if (loading && isInitialLoad) {
+        return <LoadingSpinner message="Loading dashboard data..." />;
+    }
 
     if (loading) {
         return (

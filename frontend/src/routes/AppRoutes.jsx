@@ -1,8 +1,11 @@
+import { lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from '../components/Layout';
-import Dashboard from '../pages/Dashboard';
-import Wallet from '../pages/Wallet';
-import Fraud from '../pages/Fraud';
+
+// Lazy load components for better performance
+const Layout = lazy(() => import('../components/Layout'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Wallet = lazy(() => import('../pages/Wallet'));
+const Fraud = lazy(() => import('../pages/Fraud'));
 
 const AppRoutes = () => {
     return (
