@@ -475,10 +475,6 @@ See `infra/README.md` for detailed deployment documentation.
 - [ ] Model monitoring and drift detection
 - [ ] Graph neural networks for transaction patterns
 
-## 📝 License
-
-MIT License
-
 ## 🤝 Contributing
 
 1. Fork the repository
