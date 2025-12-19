@@ -25,53 +25,51 @@ const TransactionChart = ({ data, title = "Transaction Volume", className }) => 
                 <CardTitle>{title}</CardTitle>
             </CardHeader>
             <CardContent className="pl-2">
-                <div style={{ width: '100%', height: 200, minWidth: 0 }}>
-                    <ResponsiveContainer width="100%" height="100%" debounce={1}>
-                        <AreaChart data={data}>
-                            <defs>
-                                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#D40000" stopOpacity={0.2} />
-                                    <stop offset="95%" stopColor="#D40000" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" vertical={false} />
-                            <XAxis
-                                dataKey="name"
-                                stroke="#888888"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <YAxis
-                                stroke="#888888"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                                tickFormatter={(value) => `$${value}`}
-                            />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                                    borderRadius: '12px',
-                                    border: 'none',
-                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                                    backdropFilter: 'blur(8px)'
-                                }}
-                                itemStyle={{ color: '#1a1a1a' }}
-                            />
-                            <Area
-                                type="monotone"
-                                dataKey="value"
-                                stroke="#D40000"
-                                strokeWidth={2}
-                                fillOpacity={1}
-                                fill="url(#colorValue)"
-                            />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
+                <ResponsiveContainer width="100%" height={300} debounce={1}>
+                    <AreaChart data={data}>
+                        <defs>
+                            <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#D40000" stopOpacity={0.2} />
+                                <stop offset="95%" stopColor="#D40000" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" vertical={false} />
+                        <XAxis
+                            dataKey="name"
+                            stroke="#888888"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                        />
+                        <YAxis
+                            stroke="#888888"
+                            fontSize={12}
+                            tickLine={false}
+                            axisLine={false}
+                            tickFormatter={(value) => `$${value}`}
+                        />
+                        <Tooltip
+                            contentStyle={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                borderRadius: '12px',
+                                border: 'none',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                backdropFilter: 'blur(8px)'
+                            }}
+                            itemStyle={{ color: '#1a1a1a' }}
+                        />
+                        <Area
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#D40000"
+                            strokeWidth={2}
+                            fillOpacity={1}
+                            fill="url(#colorValue)"
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
             </CardContent>
-        </Card>
+        </Card >
     );
 };
 
